@@ -5,7 +5,7 @@ import datetime as date
 import logging
 
 # Add directories to sys.path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src/old_archive'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 # Import functions
 from bounding_box_functions import *
@@ -13,7 +13,6 @@ from ndvi_extraction_functions import *
 from ndvi_image_functions import *
 from time_series_functions import *
 from wkt_functions import *
-import old_ndvi_functions_testing as old
 from log_config import logger, console_handler
 def handle_point_timeseries(lat, lon, start_date, end_date, ndvi_dir):
     try:

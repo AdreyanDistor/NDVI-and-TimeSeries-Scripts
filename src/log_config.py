@@ -14,10 +14,3 @@ console_handler.setFormatter(formatter)
 
 # Add the handler to the logger
 logger.addHandler(console_handler)
-
-# def some_function():
-#     logger.debug('This is a debug message from module1')
-#     logger.info('This is an info message from module1')
-#     logger.warning('This is a warning message from module1')
-#     logger.error('This is an error message from module1')
-#     logger.critical('This is a critical message from module1')

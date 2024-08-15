@@ -4,7 +4,7 @@ import argparse
 import logging
 
 # Add directories to sys.path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src/old_archive'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 # Import functions
 from ndvi_image_functions import *
