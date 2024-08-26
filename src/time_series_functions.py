@@ -5,7 +5,7 @@ from ndvi_extraction_functions import *
 import pandas as pd
 from ndvi_image_functions import denormalize_ndvi
 from log_config import logger
-# Extracts time_series from latitude and longitude
+
 def ndvi_timeseries_point(latitude, longitude, start_date, end_date, search_dir):
     search_files = os.listdir(search_dir)
     time_series = []
@@ -20,6 +20,8 @@ def ndvi_timeseries_point(latitude, longitude, start_date, end_date, search_dir)
                 curr_dir = os.path.join(search_dir, file)
                 curr_list = os.listdir(curr_dir)
                 curr_list = [f for f in curr_list if f.endswith('.tif')]
+
+                point_found = False
 
                 for image in curr_list:
                     try:
@@ -39,10 +41,15 @@ def ndvi_timeseries_point(latitude, longitude, start_date, end_date, search_dir)
                                     'PixelValue': denormalize_pixel_val
                                 })
                                 logger.info(f"Date: {curr_date}: {pixel_val}")
+                                point_found = True
+                                break  
                         else:
                             logger.info(f'Point not in {image}')
                     except Exception as e:
                         logger.warning(f"Error processing image {image}: {e}")
+
+                if point_found:
+                    break  
 
         except Exception as e:
             logger.warning(f"Error processing file {file}: {e}")
@@ -50,9 +57,6 @@ def ndvi_timeseries_point(latitude, longitude, start_date, end_date, search_dir)
     df = pd.DataFrame(time_series)
     return df
 
-
-# Does not parse multiple polygons yet
-# Returns NDVI time_series for a range
 def ndvi_timeseries_range(wkt_string, start_date, end_date, search_dir):
     search_files = os.listdir(search_dir)
     time_series = []

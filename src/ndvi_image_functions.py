@@ -7,8 +7,8 @@ from osgeo import gdal
 import numpy as np
 from bounding_box_functions import get_boundingbox
 from log_config import logger
+import unittest
 
-# Suppress warnings and handle invalid values
 np.seterr(divide='ignore', invalid='ignore')
 
 def import_red_nir_bands(red_file_path, nir_file_path):
@@ -24,7 +24,7 @@ def import_red_nir_bands(red_file_path, nir_file_path):
         nir_gt = nir.GetGeoTransform()
         nir_proj = nir.GetProjection()
 
-        if red_gt != nir_gt or red_proj != nir_proj:
+        if not np.allclose(red_gt, nir_gt, atol=1e-6) or red_proj != nir_proj:
             raise ValueError("Geotransform or projection of the bands do not match!")
 
         red_band = red.GetRasterBand(1)
@@ -51,19 +51,27 @@ def import_red_nir_bands(red_file_path, nir_file_path):
 def calculate_ndvi(red, nir):
     try:
         ndvi = (nir - red) / (nir + red)
+        ndvi = np.clip(ndvi, -1, 1)
         return ndvi
     except Exception:
         logger.error("Error in calculate_ndvi: Calculation failed")
         return np.full(red.shape, np.nan)
 
+def normalize_ndvi(ndvi):
+    ndvi_min = -1
+    ndvi_max = 1
+    ndvi_normalized = 1 + ((ndvi - ndvi_min) * (255 - 1)) / (ndvi_max - ndvi_min)
+    return np.round(ndvi_normalized).astype(int)
+
+def denormalize_ndvi(ndvi_normalized):
+    ndvi_min = -1
+    ndvi_max = 1
+    ndvi = ndvi_min + ((ndvi_normalized - 1) / (255 - 1)) * (ndvi_max - ndvi_min)
+    return ndvi
+
 def export_ndvi_image(ndvi, gt, proj, file_name, file_path='', quality='60'):
     try:
-        ndvi_min = np.nanmin(ndvi)
-        ndvi_max = np.nanmax(ndvi)
-        ndvi_normalized = 1 + ((ndvi - ndvi_min) * (255 - 1)) / (ndvi_max - ndvi_min)
-        ndvi_normalized = np.nan_to_num(ndvi_normalized, nan=0.0)
-        ndvi_normalized = np.round(ndvi_normalized).astype(int)
-
+        ndvi_normalized = normalize_ndvi(ndvi)
         binmask = np.where(ndvi_normalized > 0, 1, 0)
         clipped_data = np.where(binmask != 0, ndvi_normalized, np.nan)
         nodata_value = 0
@@ -86,8 +94,8 @@ def export_ndvi_image(ndvi, gt, proj, file_name, file_path='', quality='60'):
         outband = None
         outds = None
 
-    except Exception:
-        logger.error("Error in export_ndvi_image: Unable to save NDVI image")
+    except Exception as e:
+        logger.error(f"Error in export_ndvi_image: Unable to save NDVI image. {e}")
 
 def initialize_queue(main_dir):
     sub_directories = [d for d in os.listdir(main_dir) if os.path.isdir(os.path.join(main_dir, d))]
@@ -157,18 +165,3 @@ def create_and_start_threads(main_dir, output_directory, dir_queue, num_threads=
 def wait_for_threads_to_complete(threads):
     for thread in threads:
         thread.join()
-
-def denormalize_ndvi(ndvi_normalized):
-    if isinstance(ndvi_normalized, (int, float)):
-        ndvi_array = np.array([ndvi_normalized], dtype=np.float32)
-    else:
-        ndvi_array = np.array(ndvi_normalized, dtype=np.float32)
-    
-    ndvi_min = 0.0
-    ndvi_max = 1.0
-    denorm = ndvi_min + ((ndvi_array - 1) / (255 - 1)) * (ndvi_max - ndvi_min)
-    
-    if ndvi_array.size == 1:
-        return denorm.item()
-    
-    return denorm
