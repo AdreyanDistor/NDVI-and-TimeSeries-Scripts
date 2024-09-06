@@ -124,35 +124,41 @@ def process_single_directory(main_dir, output_directory, dir, quality='60'):
 
     band_4_files = glob(os.path.join(main_dir, dir, "*_B4.TIF"))
     band_5_files = glob(os.path.join(main_dir, dir, "*_B5.TIF"))
-    file_names = os.listdir(os.path.join(main_dir, dir))
-    file_names = [name for name in file_names if name.lower().endswith('.tif')]
-    file_names = [name.split('.')[0] for name in file_names]
-    file_names.pop()
-    file_names = set([name.split('_B')[0] for name in file_names])
+
+    valid_file_pairs = []
+    for band4 in band_4_files:
+        base_name = os.path.basename(band4).replace('_B4.TIF', '')
+        band5 = os.path.join(main_dir, dir, base_name + "_B5.TIF")
+        if os.path.exists(band5):
+            valid_file_pairs.append((band4, band5, base_name))
+        else:
+            logger.error(f"Band 5 missing for {base_name}, skipping this pair.")
+
     raster_dict = {'FileName': [], 'MBR': []}
 
-    for band4, band5, file_name in zip(band_4_files, band_5_files, file_names):
+    for band4, band5, file_name in valid_file_pairs:
         if file_name not in curr_files:
             red, nir, gt, proj = import_red_nir_bands(band4, band5)
             
             if red is not None and nir is not None:
                 ndvi = calculate_ndvi(red, nir)
                 export_ndvi_image(ndvi, gt, proj, file_name, full_path, quality)
-                logger.info(f"File {file_name} has been created")
+                logger.info(f"File {file_name} has been created in {full_path}")
 
                 raster_path = os.path.join(full_path, file_name)
                 MBR = get_boundingbox(raster_path + '.TIF')
                 raster_dict['FileName'].append(file_name)
                 raster_dict['MBR'].append(MBR)
             else:
-                logger.error(f"Skipping file {file_name} due to errors reading bands")
+                logger.error(f"Skipping file {file_name} due to errors reading bands.")
         else:
-            logger.info(f"File {file_name} already exists")
-    
+            logger.info(f"File {file_name} already exists, skipping.")
+
     raster_index_path = os.path.join(full_path, 'raster_index.csv')
     if not os.path.isfile(raster_index_path): 
         raster_index = pd.DataFrame(raster_dict)
         raster_index.to_csv(raster_index_path)
+
 
 def create_and_start_threads(main_dir, output_directory, dir_queue, num_threads=4, quality='60'):
     threads = []
