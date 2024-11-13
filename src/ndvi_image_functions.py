@@ -122,13 +122,17 @@ def process_single_directory(main_dir, output_directory, dir, quality='60'):
     curr_files = os.listdir(full_path)
     curr_files = [file.split('.')[0] for file in curr_files]
 
-    band_4_files = glob(os.path.join(main_dir, dir, "*_B4.TIF"))
-    band_5_files = glob(os.path.join(main_dir, dir, "*_B5.TIF"))
+    band_4_files = glob(os.path.join(main_dir, dir, "*_B4.[tT][iI][fF]"))
+    band_5_files = glob(os.path.join(main_dir, dir, "*_B5.[tT][iI][fF]"))
 
     valid_file_pairs = []
     for band4 in band_4_files:
-        base_name = os.path.basename(band4).replace('_B4.TIF', '')
+        base_name = os.path.basename(band4).replace('_B4.TIF', '').replace('_B4.tif', '')
         band5 = os.path.join(main_dir, dir, base_name + "_B5.TIF")
+        
+        if not os.path.exists(band5):  # Check for both cases for band5
+            band5 = os.path.join(main_dir, dir, base_name + "_B5.tif")
+        
         if os.path.exists(band5):
             valid_file_pairs.append((band4, band5, base_name))
         else:

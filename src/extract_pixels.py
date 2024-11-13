@@ -63,4 +63,3 @@ def combine_directories_to_csv(main_directory, output_csv, band_id=1):
         combined_df.to_csv(os.path.join(main_directory,output_csv), index=False)
         # print(f"Data saved to {output_csv}")
 
-combine_directories_to_csv('Sentinel_Data', 'combined_pixel_data.csv', band_id=1)
