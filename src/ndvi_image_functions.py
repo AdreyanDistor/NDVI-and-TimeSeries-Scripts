@@ -8,7 +8,7 @@ import numpy as np
 from bounding_box_functions import get_boundingbox
 from log_config import logger
 import unittest
-
+from extract_pixels import *
 np.seterr(divide='ignore', invalid='ignore')
 
 def import_red_nir_bands(red_file_path, nir_file_path):
@@ -110,6 +110,8 @@ def process_directory(main_dir, output_directory, dir_queue, quality='60'):
         dir = dir_queue.get()
         try:
             process_single_directory(main_dir, output_directory, dir, quality)
+            combine_directories_to_csv(main_dir, 'combined_pixel_data.csv')
+
         except Exception:
             logger.error(f"Error processing directory {dir}")
         finally:
