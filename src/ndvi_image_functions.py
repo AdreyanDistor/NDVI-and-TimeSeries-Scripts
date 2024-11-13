@@ -110,7 +110,7 @@ def process_directory(main_dir, output_directory, dir_queue, quality='60'):
         dir = dir_queue.get()
         try:
             process_single_directory(main_dir, output_directory, dir, quality)
-            combine_directories_to_csv(main_dir, 'combined_pixel_data.csv')
+            combine_directories_to_csv(output_directory, 'pixel_output.csv')
 
         except Exception:
             logger.error(f"Error processing directory {dir}")
