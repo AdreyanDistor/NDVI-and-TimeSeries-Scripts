@@ -64,5 +64,8 @@ options:
 ```
 *Note*: Make sure the input directory is the one that contains the NDVI images
 
+# This project indexes each band, so they can be quickly accesses by the program.
 
+To see the effects of indexing, look at this:
+[Plotting Runtimes With vs. Without Raster Index](https://colab.research.google.com/drive/1eknN40rhbEIAA_tDpuZ-bdt7AH4YDSc4?usp=sharing)
 
